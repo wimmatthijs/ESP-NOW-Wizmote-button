@@ -21,7 +21,6 @@ void WizMoteClass::begin() {
     Wire.begin();
 
     // Initialize EEPROM
-    // TODO WIM: USE RTC RAM INSTEAD TO AVOID OVERUSAGE OF FLASH
     EEPROM.begin(EEPROM_SIZE);
 
     // Set initialization status
@@ -61,7 +60,6 @@ void WizMoteClass::initializeEspNow(int channel) {
     }
 }
 
-//previous project used some i2c expansion for buttons
 uint8_t WizMoteClass::readButtonPress() {
 
     // Select input port 0
@@ -74,7 +72,6 @@ uint8_t WizMoteClass::readButtonPress() {
     return ~Wire.read();
 }
 
-//to be replaced by rtc ram
 uint32_t WizMoteClass::nextSequenceNumber() {
 
     // Read sequence number from EEPROM
@@ -90,7 +87,6 @@ uint32_t WizMoteClass::nextSequenceNumber() {
     Serial.println("reversing byte order");
     byte sequenceNumberAsBytes[4];
     sequenceNumberAsBytes[0] = sequenceNumber;
-    //tried to reverse the byte order as per documentation
     uint32_t sequenceNumberReversed = sequenceNumberAsBytes[0] | (sequenceNumberAsBytes[1] << 8) | (sequenceNumberAsBytes[2] << 16) | (sequenceNumberAsBytes[3] << 24);
 
     return sequenceNumberReversed;

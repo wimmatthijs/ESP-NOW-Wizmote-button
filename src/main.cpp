@@ -14,7 +14,7 @@
 #define WIZMOTE_BUTTON_BRIGHT_UP   9
 #define WIZMOTE_BUTTON_BRIGHT_DOWN 8
 
-#define DELAY_MS 50000
+#define DELAY_MS 60000
 
 typedef struct wizstructure {                                             // Data to send by ESP-Now
   byte program;  // Seems to always be set to 145 when power button is pressed and 129
@@ -41,12 +41,14 @@ typedef struct wizstructure {                                             // Dat
 
 wizstructure WizMoteMessage;
 
+//hardcoded some test jsons
+const char JsonGoalMessage[] = "{\"ps\":1}";
+const char JsonChillMessage[] = "{\"ps\":3}";
+const char JsonOffMessage[] = "{\"on\":false,\"bri\":10}";
+
 WizMoteClass WizMote;
 
 void on_data_sent(uint8_t *mac_addr, uint8_t sendStatus) {
-
-  // Turn the WizMote off once the packet has been sent
-  //WizMote.powerOff();
   Serial.println("Data was sent");
 }
 
@@ -54,6 +56,7 @@ void setup() {
 
   // Initialize Serial communication
   Serial.begin(BAUD_RATE);
+  Serial.println();
 
   // Initialize the WizMote
   WizMote.begin();
@@ -64,58 +67,24 @@ void setup() {
   // Register send callback
   WizMote.registerSendCallback(on_data_sent);
 
+  Serial.print("Sending: ");
+  Serial.println(JsonGoalMessage);
+  WizMote.broadcast((uint8_t *)&JsonGoalMessage, 8); //hardcoded the length
 
-  // NO need to turn it on, the preset already does that for you
-
-  // Prepare  message
-  // WizMoteMessage.program=129;
-  // WizMoteMessage.seq[0] = WizMote.nextSequenceNumber();
-  // WizMoteMessage.byte6=32;
-  // WizMoteMessage.button=WIZMOTE_BUTTON_ON;
-  // WizMoteMessage.byte8=1;
-  // WizMoteMessage.byte9=100;
-  // WizMoteMessage.byte10 = (uint32_t)0;
-  // for (int i=0;i<5;i++){
-  //   WizMote.broadcast((uint8_t *)&WizMoteMessage, sizeof(wizstructure));
-  //   delay(100);
-  // }
-  
-  // Prepare message
-  //The sequence number never did work that well for me, but WLED accepts any number that is not the same as previous
-  //the sequence numnber needs to be byte inverted for some reason, an attempt to this happens in the .nextSequenceNumber function
-  WizMoteMessage.program=129;
-  WizMoteMessage.seq = WizMote.nextSequenceNumber();
-  WizMoteMessage.byte6=32;
-  WizMoteMessage.button=WIZMOTE_BUTTON_ONE;
-  WizMoteMessage.byte8=1;
-  WizMoteMessage.byte9=100;
-  WizMoteMessage.byte10 = (uint32_t)0;
-
-  //sending it five times to guarantee more success, i found this was necessary when you also have an SSID set in WLED.
-  //With an SSID set in WLED it seems to do some scans or something which makes ESP NOW packets be lost
-  //For wearables my config was ONLY AP Mode Always on channel 1 (see /include/configuration.h)
-  Serial.println((uint32_t)WizMoteMessage.seq);
-  for (int i=0;i<5;i++){
-    WizMote.broadcast((uint8_t *)&WizMoteMessage, sizeof(wizstructure));
-    delay(100);
-  }
   delay(DELAY_MS);
 
-  // Prepare Last message
-  WizMoteMessage.program=129;
-  WizMoteMessage.seq = WizMote.nextSequenceNumber();
-  WizMoteMessage.byte6=32;
-  WizMoteMessage.button=WIZMOTE_BUTTON_OFF;
-  WizMoteMessage.byte8=1;
-  WizMoteMessage.byte9=100;
-  WizMoteMessage.byte10 = (uint32_t)0;
-  for (int i=0;i<5;i++){
-    WizMote.broadcast((uint8_t *)&WizMoteMessage, sizeof(wizstructure));
-    delay(100);
-  }
+  Serial.print("Sending: ");
+  Serial.println(JsonChillMessage);
+  WizMote.broadcast((uint8_t *)&JsonChillMessage, 8);
+
+  delay(DELAY_MS);
+
+  Serial.print("Sending: ");
+  Serial.println(JsonOffMessage);
+  WizMote.broadcast((uint8_t *)&JsonOffMessage, 21);
+
 }
 
-//I am using only the reset button for one dedicated function so i put everything to sleep to save battery
 void loop() {
   ESP.deepSleep(ESP.deepSleepMax());
 }
